@@ -1,1 +1,341 @@
 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uzivert Hub - Panel de Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0a12; --bg2:#1a0f26; --card:#2a1238; --orange:#ff8c00; --amber:#ffc15a; --violet:#7a3fb0; --text:#f3ecf8; --muted:#a899b8;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  background:radial-gradient(120% 80% at 70% 0%, #2a1240 0%, #150c20 45%, var(--bg) 100%) fixed;
+  color:var(--text); font-family:'Nunito',system-ui,sans-serif; padding:24px 20px 30vh; overflow-x:hidden;
+}
+.container{max-width:800px;margin:auto;position:relative;z-index:2}
+
+/* Título con letras animadas */
+h1{
+  font-family:'Cinzel',Georgia,serif; font-weight:800; text-align:center; margin:10px 0 26px;
+  font-size:clamp(28px,6vw,46px); letter-spacing:.04em; display:flex; justify-content:center; flex-wrap:wrap; gap:0 .02em;
+}
+h1 .ch{
+  display:inline-block; color:var(--orange); opacity:0;
+  animation:rise .7s cubic-bezier(.2,.9,.3,1.2) forwards, glow 4s ease-in-out infinite;
+  animation-delay:calc(var(--i)*60ms), calc(1.2s + var(--i)*140ms);
+}
+h1 .sp{width:.35em}
+@keyframes rise{from{opacity:0;transform:translateY(28px) rotate(-6deg);filter:blur(6px)}to{opacity:1;transform:none;filter:blur(0)}}
+@keyframes glow{
+  0%,70%,100%{color:var(--orange);text-shadow:0 0 0 rgba(255,140,0,0);transform:none}
+  80%{color:#fff1d6;text-shadow:0 0 18px rgba(255,170,60,.9);transform:translateY(-4px)}
+}
+.sub{text-align:center;color:var(--muted);margin:-14px 0 22px;font-size:14px;opacity:0;animation:fade .8s 1.2s forwards}
+@keyframes fade{to{opacity:1}}
+
+/* Contraseña */
+.pass-container{margin-bottom:20px;position:relative}
+input,textarea{
+  width:100%; padding:12px 14px; margin:5px 0; background:rgba(42,18,56,.75); color:var(--text);
+  border:1px solid #4a3560; border-radius:10px; font:inherit; outline:none;
+  transition:border-color .25s, box-shadow .25s, background .25s;
+}
+input::placeholder,textarea::placeholder{color:#8d7ea0}
+input:focus,textarea:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,140,0,.18);background:rgba(52,24,68,.9)}
+.pass-container input{text-align:center;padding-left:42px}
+.pass-container svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none;transition:stroke .25s}
+.pass-container:focus-within svg{stroke:var(--orange)}
+
+/* Pestañas */
+.tab{display:flex;gap:10px;margin-bottom:20px;padding:6px;background:rgba(26,15,38,.8);border:1px solid #3a2750;border-radius:14px;backdrop-filter:blur(6px);position:relative}
+.tab button{
+  flex:1; display:flex; align-items:center; justify-content:center; gap:8px; position:relative; z-index:1;
+  padding:12px 8px; background:transparent; color:var(--muted); border:0; border-radius:10px; cursor:pointer;
+  font:700 14px 'Nunito',sans-serif; transition:color .25s, transform .15s;
+}
+.tab button svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .35s}
+.tab button:hover{color:var(--text)}
+.tab button:hover svg{transform:scale(1.15) rotate(-6deg)}
+.tab button:active{transform:scale(.96)}
+.tab button.on{color:#1a0f26}
+.tab button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.pill{position:absolute;z-index:0;top:6px;bottom:6px;left:6px;border-radius:10px;background:linear-gradient(135deg,var(--amber),var(--orange));box-shadow:0 6px 18px rgba(255,140,0,.35);transition:transform .4s cubic-bezier(.3,1.3,.5,1),width .4s cubic-bezier(.3,1.3,.5,1)}
+
+/* Secciones */
+.section{display:none;background:rgba(26,15,38,.82);padding:20px;border-radius:14px;border:1px solid #4a3060;backdrop-filter:blur(6px)}
+.section.active{display:block;animation:swap .45s cubic-bezier(.2,.8,.2,1)}
+@keyframes swap{from{opacity:0;transform:translateY(12px) scale(.985)}to{opacity:1;transform:none}}
+h2{font-family:'Cinzel',serif;margin:0 0 14px;font-size:22px;color:var(--amber)}
+h3{margin:22px 0 8px;color:var(--muted);font-size:15px}
+
+/* Botón de acción */
+button.action{
+  position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; gap:10px;
+  background:linear-gradient(135deg,var(--amber),var(--orange)); color:#1a0f26; font:800 15px 'Nunito',sans-serif;
+  border:0; padding:13px; border-radius:10px; cursor:pointer; width:100%; margin-top:12px;
+  box-shadow:0 8px 22px rgba(255,140,0,.28); transition:transform .15s, box-shadow .25s, filter .25s;
+}
+button.action svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:transform .3s}
+button.action::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);transform:translateX(-120%)}
+button.action:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(255,140,0,.42)}
+button.action:hover::after{transition:transform .7s;transform:translateX(120%)}
+button.action:hover svg{transform:translate(3px,-3px)}
+button.action:active{transform:translateY(1px) scale(.98)}
+button.action:focus-visible{outline:2px solid #fff;outline-offset:3px}
+button.action.loading{pointer-events:none;filter:saturate(.6)}
+button.action.loading svg{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Tarjetas */
+.card{background:var(--card);padding:12px 14px;margin:8px 0;border-radius:10px;border-left:3px solid var(--orange);opacity:0;animation:cardIn .5s forwards;animation-delay:calc(var(--n,0)*70ms);transition:transform .25s, background .25s}
+.card:hover{transform:translateX(4px);background:#33164a}
+@keyframes cardIn{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+.empty{color:var(--muted)}
+
+/* Aviso */
+#toast{position:fixed;top:18px;left:50%;transform:translate(-50%,-90px);z-index:10;padding:12px 20px;border-radius:12px;background:#2a1238;border:1px solid var(--orange);color:var(--text);font-weight:700;box-shadow:0 10px 30px rgba(0,0,0,.5);transition:transform .45s cubic-bezier(.3,1.4,.5,1);max-width:90vw}
+#toast.show{transform:translate(-50%,0)}
+#toast.err{border-color:#e2455a}
+
+/* Escena de fondo */
+.scene{position:fixed;left:0;right:0;bottom:0;height:34vh;max-height:340px;z-index:1;pointer-events:none}
+.scene svg{width:100%;height:100%;display:block}
+.moonglow{animation:pulse 6s ease-in-out infinite}
+.star{animation:tw 3s ease-in-out infinite}
+.star:nth-child(2n){animation-delay:1s}.star:nth-child(3n){animation-delay:2s}
+.fly{animation:float 7s ease-in-out infinite}
+.fly:nth-child(2n){animation-duration:9s;animation-delay:-3s}.fly:nth-child(3n){animation-duration:11s;animation-delay:-6s}
+.person{animation:breathe 4.5s ease-in-out infinite}
+.tail{transform-origin:222px 166px;animation:wag .5s ease-in-out infinite alternate}
+.ear{transform-origin:238px 127px;animation:ear 5s ease-in-out infinite}
+.dhead{transform-origin:242px 142px;animation:look 8s ease-in-out infinite}
+.lantern{animation:flick 2.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.55}}
+@keyframes tw{0%,100%{opacity:.25}50%{opacity:1}}
+@keyframes float{0%,100%{transform:translate(0,0);opacity:.2}30%{opacity:1}50%{transform:translate(18px,-22px)}80%{opacity:.8;transform:translate(-10px,-10px)}}
+@keyframes breathe{50%{transform:translateY(1.6px)}}
+@keyframes wag{from{transform:rotate(-14deg)}to{transform:rotate(16deg)}}
+@keyframes ear{0%,88%,100%{transform:rotate(0)}92%{transform:rotate(-14deg)}96%{transform:rotate(4deg)}}
+@keyframes look{0%,35%,100%{transform:rotate(0)}50%,80%{transform:rotate(-7deg)}}
+@keyframes flick{0%,100%{opacity:.9}20%{opacity:.6}40%{opacity:1}65%{opacity:.7}}
+
+@media (max-width:560px){
+  .tab button{font-size:12px;gap:5px;padding:11px 4px}
+  .tab button svg{width:15px;height:15px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<div class="scene" aria-hidden="true">
+<svg viewBox="0 0 400 220" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="mg"><stop offset="0" stop-color="#ffe9b8" stop-opacity=".55"/><stop offset="1" stop-color="#ffe9b8" stop-opacity="0"/></radialGradient>
+    <radialGradient id="lg"><stop offset="0" stop-color="#ff9a1f" stop-opacity=".6"/><stop offset="1" stop-color="#ff9a1f" stop-opacity="0"/></radialGradient>
+    <linearGradient id="hill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b0f28"/><stop offset="1" stop-color="#07050b"/></linearGradient>
+  </defs>
+  <g>
+    <circle class="star" cx="40" cy="30" r="1.2" fill="#fff"/><circle class="star" cx="90" cy="60" r="1" fill="#fff"/>
+    <circle class="star" cx="150" cy="22" r="1.3" fill="#fff"/><circle class="star" cx="210" cy="48" r="1" fill="#fff"/>
+    <circle class="star" cx="355" cy="28" r="1.2" fill="#fff"/><circle class="star" cx="120" cy="90" r="1" fill="#fff"/>
+  </g>
+  <circle class="moonglow" cx="310" cy="62" r="70" fill="url(#mg)"/>
+  <circle cx="310" cy="62" r="30" fill="#f6e6bd"/>
+  <circle cx="300" cy="55" r="5" fill="#e4d09c" opacity=".7"/><circle cx="320" cy="72" r="4" fill="#e4d09c" opacity=".7"/>
+  <path d="M0 220 L0 176 Q70 160 140 170 T290 168 T400 158 L400 220 Z" fill="url(#hill)"/>
+  <path d="M0 195 Q100 182 200 192 T400 186 L400 220 L0 220Z" fill="#07050b"/>
+
+  <!-- Persona sentada -->
+  <g class="person">
+    <path d="M148 169 C146 142 156 124 172 122 C187 122 193 138 193 156 L198 169 Z" fill="#150d1f"/>
+    <circle cx="174" cy="112" r="11" fill="#150d1f"/>
+    <path d="M165 108 Q174 96 186 106 L184 112 Q176 104 167 112Z" fill="#0b0712"/>
+    <path d="M176 165 L212 165 Q219 165 219 171 L176 171 Z" fill="#150d1f"/>
+    <path d="M186 140 Q204 147 218 152" stroke="#150d1f" stroke-width="6" stroke-linecap="round" fill="none"/>
+  </g>
+  <!-- Perro sentado -->
+  <g>
+    <path class="tail" d="M222 167 Q208 162 206 150" stroke="#150d1f" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+    <path d="M222 171 C220 153 226 143 236 143 C247 143 251 155 249 171 Z" fill="#150d1f"/>
+    <g class="dhead">
+      <circle cx="242" cy="134" r="8.5" fill="#150d1f"/>
+      <ellipse cx="249.5" cy="137" rx="5.5" ry="3.8" fill="#150d1f"/>
+      <path class="ear" d="M236 129 L233 117 L243 125 Z" fill="#0b0712"/>
+    </g>
+  </g>
+  <!-- Farol -->
+  <circle class="lantern" cx="268" cy="162" r="34" fill="url(#lg)"/>
+  <g class="lantern">
+    <path d="M264 154 Q268 148 272 154" stroke="#3a2a14" stroke-width="1.5" fill="none"/>
+    <rect x="263" y="154" width="10" height="13" rx="2" fill="#ffb347"/>
+    <rect x="262" y="166" width="12" height="3" fill="#2a1a0c"/>
+  </g>
+  <!-- Luciérnagas -->
+  <g fill="#ffd77a">
+    <circle class="fly" cx="110" cy="150" r="1.8"/><circle class="fly" cx="300" cy="140" r="1.6"/>
+    <circle class="fly" cx="180" cy="95" r="1.5"/><circle class="fly" cx="345" cy="150" r="1.8"/>
+    <circle class="fly" cx="60" cy="130" r="1.5"/>
+  </g>
+</svg>
+</div>
+
+<div class="container">
+    <h1 id="titulo" aria-label="Uzivert Hub - Panel">Uzivert Hub - Panel</h1>
+    <div class="sub">Gestión de usuarios y actualizaciones</div>
+
+    <div class="pass-container">
+        <svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        <input type="password" id="pass" placeholder="Ingresa la contraseña de Admin" onchange="guardarPass()">
+    </div>
+
+    <div class="tab" id="tabs">
+        <span class="pill" id="pill"></span>
+        <button class="on" data-tab="verificados" onclick="showTab('verificados',this)">
+            <svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>Verificados
+        </button>
+        <button data-tab="baneados" onclick="showTab('baneados',this)">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>Baneados
+        </button>
+        <button data-tab="updates" onclick="showTab('updates',this)">
+            <svg viewBox="0 0 24 24"><path d="M4 10v4h3l7 4V6L7 10z"/><path d="M18 9a4 4 0 0 1 0 6"/></svg>Updates
+        </button>
+    </div>
+
+    <div id="verificados" class="section active">
+        <h2>Usuarios Verificados</h2>
+        <div id="lista-verificados">Cargando...</div>
+    </div>
+
+    <div id="baneados" class="section">
+        <h2>Usuarios Baneados</h2>
+        <div id="lista-baneados">Cargando...</div>
+    </div>
+
+    <div id="updates" class="section">
+        <h2>Crear Actualización</h2>
+        <input type="text" id="upd-titulo" placeholder="Título (Ej: Update v4.8)">
+        <input type="text" id="upd-version" placeholder="Versión (Ej: 4.8)">
+        <textarea id="upd-desc" rows="4" placeholder="Descripción de la actualización..."></textarea>
+        <button class="action" id="btn-pub" onclick="publicarUpdate()">
+            <svg viewBox="0 0 24 24"><path d="M5 12l14-7-5 14-3-6z"/></svg><span>Publicar Actualización</span>
+        </button>
+        <h3>Últimos Updates</h3>
+        <div id="lista-updates">Cargando...</div>
+    </div>
+</div>
+
+<div id="toast" role="status"></div>
+
+<script>
+    const API_URL = "https://uzivert-api.onrender.com"; // Tu API de Render
+    let adminPass = localStorage.getItem("uz_pass") || "";
+
+    // Título: cada letra es un span animado
+    (function(){
+        const h = document.getElementById("titulo");
+        const txt = h.textContent; h.textContent = "";
+        [...txt].forEach((c,i)=>{
+            const s = document.createElement("span");
+            s.className = c === " " ? "ch sp" : "ch";
+            s.style.setProperty("--i", i);
+            s.textContent = c === " " ? "\u00A0" : c;
+            s.setAttribute("aria-hidden","true");
+            h.appendChild(s);
+        });
+    })();
+
+    function esc(v){
+        return String(v ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    let toastT;
+    function toast(msg, err){
+        const t = document.getElementById("toast");
+        t.textContent = msg; t.className = "show" + (err ? " err" : "");
+        clearTimeout(toastT); toastT = setTimeout(()=> t.className = "", 3000);
+    }
+
+    function guardarPass() {
+        adminPass = document.getElementById("pass").value;
+        localStorage.setItem("uz_pass", adminPass);
+        cargarTodo();
+    }
+
+    function movePill(btn){
+        const p = document.getElementById("pill");
+        p.style.width = btn.offsetWidth + "px";
+        p.style.transform = `translateX(${btn.offsetLeft - 6}px)`;
+    }
+
+    function showTab(id, btn) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.querySelectorAll('#tabs button').forEach(b => b.classList.remove('on'));
+        btn.classList.add('on'); movePill(btn);
+    }
+    window.addEventListener("load", ()=> movePill(document.querySelector("#tabs button.on")));
+    window.addEventListener("resize", ()=> movePill(document.querySelector("#tabs button.on")));
+
+    function pintar(id, items, fn, vacio){
+        const div = document.getElementById(id);
+        if (Array.isArray(items) && items.length > 0) {
+            div.innerHTML = items.map((u,n) => `<div class="card" style="--n:${n}">${fn(u)}</div>`).join('');
+        } else { div.innerHTML = `<span class="empty">${vacio}</span>`; }
+    }
+
+    async function cargarTodo() {
+        if (!adminPass) return;
+        document.getElementById("pass").value = adminPass;
+        const q = encodeURIComponent(adminPass);
+
+        try {
+            const res = await fetch(`${API_URL}/admin/verificados?pass=${q}`);
+            pintar("lista-verificados", await res.json(), u => `<b>${esc(u.roblox_user)}</b> (Discord: ${esc(u.discord_id)})`, "No hay usuarios verificados.");
+        } catch(e) { document.getElementById("lista-verificados").textContent = "Error al cargar."; }
+
+        try {
+            const res = await fetch(`${API_URL}/admin/baneados?pass=${q}`);
+            pintar("lista-baneados", await res.json(), u => `<b>${esc(u.nombre)}</b>`, "No hay usuarios baneados.");
+        } catch(e) { document.getElementById("lista-baneados").textContent = "Error al cargar."; }
+
+        try {
+            const res = await fetch(`${API_URL}/api/updates`);
+            pintar("lista-updates", await res.json(), u => `<b>${esc(u.titulo)}</b> - ${esc(u.descripcion)}`, "No hay actualizaciones.");
+        } catch(e) { document.getElementById("lista-updates").textContent = "Error al cargar."; }
+    }
+
+    async function publicarUpdate() {
+        if (!adminPass) return toast("Primero poné la contraseña", true);
+        const titulo = document.getElementById("upd-titulo").value;
+        const version = document.getElementById("upd-version").value;
+        const desc = document.getElementById("upd-desc").value;
+        if (!titulo || !desc) return toast("Faltan datos", true);
+
+        const btn = document.getElementById("btn-pub");
+        const label = btn.querySelector("span");
+        btn.classList.add("loading"); label.textContent = "Publicando...";
+        try {
+            const res = await fetch(`${API_URL}/admin/crear_update?pass=${encodeURIComponent(adminPass)}&titulo=${encodeURIComponent(titulo)}&version=${encodeURIComponent(version)}&desc=${encodeURIComponent(desc)}`);
+            const data = await res.json();
+            if (data.ok) {
+                toast("Actualización publicada");
+                ["upd-titulo","upd-version","upd-desc"].forEach(i => document.getElementById(i).value = "");
+                cargarTodo();
+            } else { toast("Error: " + data.error, true); }
+        } catch(e) { toast("No se pudo conectar con la API", true); }
+        btn.classList.remove("loading"); label.textContent = "Publicar Actualización";
+    }
+
+    cargarTodo();
+</script>
+</body>
+</html>
